@@ -1,53 +1,75 @@
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <title>Primzahl-Tonreihe</title>
-    <script src="https://cdn.jsdelivr.net/npm/tone@14.7.77/build/Tone.min.js"></script>
-    <style>
-        body {
-            font-family: sans-serif;
-            background: #f2f2f2;
-            padding: 20px;
-        }
-        .button-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-            gap: 10px;
-        }
-        button {
-            padding: 10px;
-            font-size: 14px;
-            border: none;
-            border-radius: 5px;
-            background-color: #4CAF50;
-            color: white;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Primzahlen Synth (Native)</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f4f4f4;
+      padding: 20px;
+    }
+    .button-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      gap: 10px;
+    }
+    button {
+      padding: 10px;
+      font-size: 14px;
+      border: none;
+      border-radius: 5px;
+      background-color: #4CAF50;
+      color: white;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+  </style>
 </head>
 <body>
-    <h2>Primzahl-Tonreihe</h2>
-    <p>Tippe auf einen Button, um den Ton zu hören</p>
-    <div class="button-grid" id="buttons"></div>
+  <h2>Primzahl-Tonreihe (Native Audio)</h2>
+  <p>Tippe auf einen Button, um den Ton zu hören</p>
+  <div class="button-grid" id="buttons"></div>
 
-    <script>
-        const frequencies = [101, 107, 113, 127, 137, 149, 157, 167, 179, 191, 211, 223, 239, 251, 269, 283, 307, 331, 349, 367, 389, 409, 431, 457, 487, 521, 557, 587, 617, 653, 691, 727, 769, 809, 853, 907, 953, 1009, 1061, 1117, 1181, 1249, 1319, 1399, 1471, 1549, 1627, 1709, 1801, 1901, 1997, 2099, 2207, 2333, 2459, 2591, 2729, 2879, 3023, 3181, 3343, 3511, 3691, 3877, 4073, 4283, 4507, 4733, 4973];
-        const synth = new Tone.Synth().toDestination();
+  <script>
+    const frequencies = [101, 107, 113, 127, 137, 149, 157, 167, 179, 191,
+                         199, 211, 227, 241, 257, 271, 293, 313, 337, 359,
+                         383, 409, 439, 461, 487, 521, 557, 593, 631, 673,
+                         719, 761, 809, 859, 911, 967, 1021, 1087, 1153, 1223,
+                         1297, 1373, 1459, 1549, 1637, 1723, 1811, 1907, 2027, 2137,
+                         2251, 2371, 2503, 2633, 2789, 2939, 3089, 3253, 3413, 3583,
+                         3761, 3943, 4133, 4337, 4547, 4759, 4993];
 
-        const buttonsDiv = document.getElementById("buttons");
-        frequencies.forEach(freq => {
-            const btn = document.createElement("button");
-            btn.innerText = freq + " Hz";
-            btn.onclick = async () => {
-                await Tone.start(); // Für mobiles Audio
-                synth.triggerAttackRelease(freq, "1s");
-            };
-            buttonsDiv.appendChild(btn);
-        });
-    </script>
+    let audioCtx = null;
+
+    function playTone(freq) {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+
+      osc.type = "sine";
+      osc.frequency.value = freq;
+
+      gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.0);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.start();
+      osc.stop(audioCtx.currentTime + 1.0);
+    }
+
+    const buttonsDiv = document.getElementById("buttons");
+    frequencies.forEach(freq => {
+      const btn = document.createElement("button");
+      btn.innerText = freq + " Hz";
+      btn.onclick = () => playTone(freq);
+      buttonsDiv.appendChild(btn);
+    });
+  </script>
 </body>
 </html>
